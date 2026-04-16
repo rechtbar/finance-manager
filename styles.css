@@ -1,0 +1,455 @@
+/* === ZÁKLADNÍ STYLY PRO CELÝ PROJEKT === */
+* {
+    /* Všechno počítá rozměry přes border-box */
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #4f46e5;
+    --primary-light: #eef2ff;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+}
+
+body {
+    /* Základní vzhled stránky */
+    max-width: 1000px;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+section {
+    margin-bottom: 40px;
+    scroll-margin-top: 90px;
+}
+
+.page {
+    /* Stránky (login / dashboard) se vycentrují na střed */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+.hidden {
+    /* schová prvek (přes "important" přebije jiné styly) */
+    display: none !important;
+}
+
+.top-bar {
+    width: 100%;
+    height: 75px;
+    background: var(--primary);
+    border-bottom: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0px 20px;
+    color: var(--primary-light);
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.top-bar-title {
+    display: flex;
+    align-items: center;
+}
+
+.top-bar img {
+    height: 70px;
+    /* kontrolovaná velikost */
+    width: auto;
+}
+
+.top-navigation {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.top-navigation img {
+    width: clamp(15px, 35px, 40px);
+    height: clamp(15px, 35px, 40px);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.top-navigation img:hover {
+    transform: scale(1.15);
+    opacity: 0.9;
+}
+
+.nav-item {
+    position: relative;
+    display: inline-block;
+}
+
+.nav-item .tooltip {
+    position: absolute;
+    top: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+
+    background: #1e293b;
+    color: white;
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.2s;
+}
+
+.nav-item:hover .tooltip {
+    opacity: 1;
+}
+
+.top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#logout {
+    background: transparent;
+    color: var(--primary-light);
+    border: 1px solid var(--border);
+}
+
+#logout:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/*Nadpisy*/
+h1 {
+    font-size: 30px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+hr {
+    border: none;
+    /* zruší default styl */
+    border-top: 1px solid var(--border);
+    /* vytvoří čáru */
+    margin: 20px 0;
+}
+
+
+form {
+    /* Formuláře vypadají konzistentně a mají rozumnou šířku */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 300px;
+}
+
+.hint {
+    font-size: 12px;
+    color: var(--muted);
+    min-height: 14px;
+}
+
+input,
+select,
+button {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+    margin: 5px;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+select:hover {
+    border-color: var(--primary);
+}
+
+/*Buttons*/
+button {
+    cursor: pointer;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    transition: 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.balance-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+
+    width: 100%;
+    max-width: 600px;
+    margin: 10px auto;
+}
+
+.balance-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 10px 20px 20px;
+    width: 100%;
+    max-width: 400px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: 0.2s;
+}
+
+.balance-card:hover {
+    transform: translateY(-2px);
+}
+
+.balance-label {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 5px;
+}
+
+#balance {
+    /* Zobrazení stavu účtu */
+    font-size: 35px;
+    font-weight: bold;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.balance-positive {
+    color: var(--success);
+
+}
+
+.balance-negative {
+    color: var(--danger);
+}
+
+#export-csv {
+    cursor: pointer;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: none;
+    border-radius: 10px;
+    transition: 0.2s;
+}
+
+
+.modal {
+    /* Overlay pro modál (pozadí + vycentrování obsahu) */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    /* Vnitrni vzhled modalu */
+    background: var(--card);
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.modal-content select:hover {
+    border-color: var(--primary);
+}
+
+.modal-buttons {
+    /* Tlačítka v modálu zarovnaná doprava */
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.modal-buttons button {
+    /* Základní vzhled tlačítek v modálu */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal-buttons button[type="submit"] {
+    /* Primární akce (submit) = zelené tlačítko */
+    background: var(--success);
+    color: var(--primary-light);
+}
+
+#close-expense-modal,
+#close-income-modal {
+    /* Zrušit tlačítka mají šedou barvu */
+    background: var(--muted);
+    color: var(--primary-light);
+}
+
+/*=== TRANSAKČNÍ TABULKA ===*/
+.tx-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.tx-table th,
+.tx-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.tx-table thead {
+    background: var(--primary-light);
+    text-align: left;
+    font-weight: 700;
+}
+
+.tx-table tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+.tx-table tbody tr:hover {
+    background: #f1f5f9;
+}
+
+.tx-amount {
+    text-align: right;
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.tx-action {
+    text-align: center;
+    width: 70px;
+}
+
+.tx-income .tx-amount {
+    color: var(--success);
+}
+
+.tx-expense .tx-amount {
+    color: var(--danger);
+}
+
+.delete-btn {
+    /* Ikonka/btn na smazání transakce v seznamu */
+    border: 1px solid var(--border);
+    font-size: 14px;
+    background: #fee2e2;
+    color: var(--danger);
+    border-radius: 6px;
+    padding: 5px 8px;
+}
+
+.delete-btn:hover {
+    background: #fecaca;
+}
+
+#no-transactions-message {
+    margin-top: 10px;
+    color: var(--muted);
+}
+
+.pie-grid {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    width: 100%;
+    align-items: flex-start;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.pie-card {
+    width: 360px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+}
+
+.pie-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.pie-controls select,
+.pie-controls input,
+.pie-controls button {
+    width: 100%;
+}
+
+.pie-custom-range {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 10px;
+    align-items: center;
+}
+
+.input-error {
+    background: #f8d7da;
+    border: 1px solid var(--danger);
+}
+
+.input-ok {
+    background: #d1e7dd;
+    border: 1px solid var(--success);
+}
+
+
+
+canvas {
+    /* Grafům necháváme maximální šířku containeru */
+    max-width: 100%;
+}

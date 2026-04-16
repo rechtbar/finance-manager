@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Finance manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+    <!-- Login sekce, skryje se po prihlaseni -->
+    <div id="login-page" class="page">
+        <div>
+            <img src="graphics/logo.png" alt="Kyblík s penězi" width="200" />
+        </div>
+        <h1>Přihlášení</h1>
+        <form id="login-form">
+            <input type="text" id="username" placeholder="Uživatelské jméno" required>
+            <input type="password" id="password" placeholder="Heslo" required>
+            <button type="submit">Přihlásit se</button>
+            <button type="button" id="new-user">Nový uživatel</button>
+        </form>
+
+        <!-- Registrace noveho uzivatele, zobrazi se po kliknuti na "New user" -->
+        <div id="register-section" class="hidden">
+            <h2>Registrace</h2>
+            <form id="register-form">
+                <input type="text" id="register-username" placeholder="Nové uživatelské jméno" required>
+                <input type="password" id="register-password" placeholder="Zadejte nové heslo" required>
+                <input type="password" id="register-password-confirm" placeholder="Zadejte heslo znovu" required>
+                <small id="password-match-message" class="hint"></small>
+                <div class="modal-buttons">
+                    <button type="submit">Vytvořit účet</button>
+                    <button type="button" id="cancel-register">Zrušit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Uvodni stranka, objevi se po uspesnem prihlaseni -->
+    <div id="dashboard" class="page hidden">
+        <header class="top-bar">
+            <img src="graphics/logo.png" alt="Kyblík s penězi" width="30" />
+            <h1 class="top-bar-title">Finance Manager</h1>
+            <div class="top-navigation">
+                <a href="#transactions-section" class="nav-item">
+                    <img src="graphics/transaction-icon.png" alt="Transakce">
+                    <span class="tooltip">Transakce</span>
+                </a>
+
+                <a href="#bar-graph-section" class="nav-item">
+                    <img src="graphics/bar-graph-icon.png" alt="Graf">
+                    <span class="tooltip">Příjmy a výdaje v čase</span>
+                </a>
+
+                <a href="#pie-chart-section" class="nav-item">
+                    <img src="graphics/pie-chart-icon.png" alt="Pie graf">
+                    <span class="tooltip">Poměry kategorií</span>
+                </a>
+            </div>
+            <div class="top-bar-right">
+                <span>👤<span id="user-name"></span></span>
+                <button id="logout">Odhlásit</button>
+            </div>
+        </header>
+        <p>Vítejte v našem finančním manažeru!
+            Zde můžete spravovat své finance, sledovat výdaje a
+            plánovat rozpočet.</p>
+        <hr>
+        <main>
+            <div class="balance-section">
+                <div id="account-balance" class="balance-card">
+                    <p id="balance-label">Stav účtu:</p>
+                    <p id="balance">0 Kč</p>
+                </div>
+                <button id="export-csv"> → Exportovat údaje</button>
+            </div>
+            <hr>
+            <!-- Transakce - modals pro pridani prijmu a vydaju, objevi se po kliknuti na tlacitko-->
+            <section id="transactions-section">
+                <h2>TRANSAKCE</h2>
+                <button id="add-expense">Nový výdaj</button>
+                <button id="add-income">Nový příjem</button>
+                <div id="expense-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <h2>Nový výdaj</h2>
+                        <form id="expense-form">
+                            <input type="number" id="expense-amount" placeholder="Částka (Kč)" required>
+                            <input type="date" id="expense-date" placeholder="Datum" required>
+                            <input type="text" id="expense-place" placeholder="Místo">
+                            <select id="expense-category" required>
+                                <option value="Jídlo">Jídlo</option>
+                                <option value="Domácnost">Domácnost</option>
+                                <option value="Zábava">Zábava</option>
+                                <option value="Bankovní výběr">Bankovní výběr</option>
+                                <option value="Ostatní výdaje">Ostatní výdaje</option>
+                                <option value="new">+ Nová kategorie</option>
+                            </select>
+                            <input type="text" id="expense-description" placeholder="Popis/poznámka">
+                            <div class="modal-buttons">
+                                <button type="submit">Uložit výdaj</button>
+                                <button type="button" id="close-expense-modal">Zrušit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div id="income-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <h2>Nový příjem</h2>
+                        <form id="income-form">
+                            <input type="number" id="income-amount" placeholder="Částka (Kč)" required>
+                            <input type="date" id="income-date" placeholder="Datum" required>
+                            <select id="income-category" required>
+                                <option value="Výplata">Výplata</option>
+                                <option value="Dar">Dar</option>
+                                <option value="Prodej">Prodej</option>
+                                <option value="Ostatní příjmy">Ostatní příjmy</option>
+                                <option value="new">+ Nová kategorie</option>
+                            </select>
+                            <input type="text" id="income-description" placeholder="Popis/poznámka">
+                            <div class="modal-buttons">
+                                <button type="submit">Přidat příjem</button>
+                                <button type="button" id="close-income-modal">Zrušit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!--FILTROVANI transakci - podle ruznych kriterii-->
+                <div id="transaction-controls">
+                    <label>Počet:</label>
+                    <select id="transaction-limit">
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="all">Vše</option>
+                    </select>
+
+                    <label>Typ transakce:</label>
+                    <select id="transaction-type">
+                        <option value="all">Vše</option>
+                        <option value="expense">Výdaj</option>
+                        <option value="income">Příjem</option>
+                    </select> <br>
+
+                    <button id="filters">Rozšířené filtrování</button>
+                </div>
+                <div id="advanced-filters" class="hidden">
+                    <label>Kategorie:</label>
+                    <select id="filter-category">
+                        <option value="">Vše</option>
+                        <option value="Jídlo">Jídlo</option>
+                        <option value="Domácnost">Domácnost</option>
+                        <option value="Zábava">Zábava</option>
+                        <option value="Bankovní výběr">Bankovní výběr</option>
+                        <option value="Ostatní výdaje">Ostatní výdaje</option>
+                        <option value="Výplata">Výplata</option>
+                        <option value="Dar">Dar</option>
+                        <option value="Prodej">Prodej</option>
+                        <option value="Ostatní příjmy">Ostatní příjmy</option>
+                    </select> <br>
+
+                    <label>Datum od:</label>
+                    <input type="date" id="filter-date-from">
+
+                    <label>Datum do:</label>
+                    <input type="date" id="filter-date-to"> <br>
+
+                    <label>Minimální částka:</label>
+                    <input type="number" id="filter-min">
+
+                    <label>Maximální částka:</label>
+                    <input type="number" id="filter-max"> <br>
+
+                    <label>Hledat:</label>
+                    <input type="text" id="filter-search" placeholder="Hledat..."> <br>
+
+                    <button id="apply-filters">Použít filtry</button>
+                    <button id="reset-filters">Resetovat filtry</button>
+                </div>
+                <div>
+                    <h3>Poslední transakce:</h3>
+                    <table id="transaction-table" class="tx-table">
+                        <thead>
+                            <tr>
+                                <th>Datum</th>
+                                <th>Kategorie</th>
+                                <th>Místo</th>
+                                <th>Popis</th>
+                                <th class="tx-amount">Částka</th>
+                                <th class="tx-action"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-tbody"></tbody>
+                    </table>
+                    <p id="no-transactions-message" class="hidden">Nemáte žádné transakce odpovídající filtru.</p>
+                </div>
+            </section>
+            <hr>
+            <section id="bar-graph-section">
+                <div>
+                    <h2>PŘÍJMY A VÝDAJE</h2>
+                    <canvas id="income-expense-chart" width="600" height="300"></canvas>
+                </div>
+                <div id="chart-controls">
+                    <label for="chart-interval-type">Zobrazit podle:</label>
+                    <select id="chart-interval-type">
+                        <option value="day">Dny</option>
+                        <option value="week">Týdny</option>
+                        <option value="month" selected>Měsíce</option>
+                        <option value="year">Roky</option>
+                    </select>
+                    <div id="custom-date-range">
+                        <label>Od:</label>
+                        <input type="date" id="chart-date-from">
+                        <label>Do:</label>
+                        <input type="date" id="chart-date-to">
+                    </div>
+                    <button id="update-chart">Aktualizovat graf</button>
+                </div>
+            </section>
+            <hr>
+            <section id="pie-chart-section">
+                <h2>POMĚRY KATEGORIÍ</h2>
+                <!--pie charts pro kategorie výdajů a příjmů -->
+                <div class="pie-grid">
+                    <section class="pie-card">
+                        <h4>Výdaje podle kategorií</h4>
+                        <canvas id="expense-category-pie" width="400" height="300"></canvas>
+                        <div class="pie-controls">
+                            <label>Období:</label>
+                            <select id="expense-pie-preset">
+                                <option value="today">Dnes</option>
+                                <option value="last7">Posledních 7 dní</option>
+                                <option value="last30" selected>Posledních 30 dní</option>
+                                <option value="thisMonth">Tento měsíc</option>
+                                <option value="lastMonth">Minulý měsíc</option>
+                                <option value="thisYear">Tento rok</option>
+                                <option value="custom">Vlastní</option>
+                            </select>
+
+                            <div class="pie-custom-range hidden">
+                                <label>Od:</label>
+                                <input type="date" id="expense-pie-from" disabled>
+                                <label>Do:</label>
+                                <input type="date" id="expense-pie-to" disabled>
+                            </div>
+                            <button id="expense-pie-update" type="button" class="hidden">Aktualizovat</button>
+                        </div>
+                        <p id="expense-pie-empty" class="hidden">Ve zvoleném období nejsou žádné výdaje.</p>
+                    </section>
+                    <hr>
+                    <section class="pie-card">
+                        <h4>Příjmy podle kategorií</h4>
+                        <div class="pie-controls">
+                            <label>Období:</label>
+                            <select id="income-pie-preset">
+                                <option value="today">Dnes</option>
+                                <option value="last7">Posledních 7 dní</option>
+                                <option value="last30" selected>Posledních 30 dní</option>
+                                <option value="thisMonth">Tento měsíc</option>
+                                <option value="lastMonth">Minulý měsíc</option>
+                                <option value="thisYear">Tento rok</option>
+                                <option value="custom">Vlastní</option>
+                            </select>
+
+                            <div class="pie-custom-range hidden">
+                                <label>Od:</label>
+                                <input type="date" id="income-pie-from" disabled>
+                                <label>Do:</label>
+                                <input type="date" id="income-pie-to" disabled>
+                            </div>
+
+                            <button id="income-pie-update" type="button" class="hidden">Aktualizovat</button>
+                        </div>
+
+                        <p id="income-pie-empty" class="hidden">Ve zvoleném období nejsou žádné příjmy.</p>
+                        <canvas id="income-category-pie" width="400" height="300"></canvas>
+                    </section>
+                </div>
+            </section>
+    </div>
+    <hr>
+    </main>
+
+    <!-- odkazy na ostatni slozky, script + knihovna na grafy-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script/charts.js"></script>
+    <script src="script/transactions.js"></script>
+    <script src="script/app.js"></script>
+
+</body>
+
+</html>

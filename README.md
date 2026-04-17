@@ -1,2 +1,2 @@
-# finance-manager
+# rechtbar.github.io
 Financni manager - projekt na maturitu.

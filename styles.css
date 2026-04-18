@@ -1,9 +1,9 @@
 /* === ZÁKLADNÍ STYLY PRO CELÝ PROJEKT === */
 * {
-    /* Všechno počítá rozměry přes border-box */
     box-sizing: border-box;
 }
 
+/*Předem definované barvy, aby to působilo jednolitě, konzistentně*/
 :root {
     --primary: #4f46e5;
     --primary-light: #eef2ff;
@@ -17,7 +17,7 @@
 }
 
 body {
-    /* Základní vzhled stránky */
+    /* Základní vzhled stránky - barvy, fonty,.. */
     max-width: 1000px;
     font-family: 'Inter', sans-serif;
     background: var(--bg);
@@ -30,10 +30,11 @@ body {
 section {
     margin-bottom: 40px;
     scroll-margin-top: 90px;
+    /* Při automatickém scrollu nebude nadpis skrytý top-barem */
 }
 
 .page {
-    /* Stránky (login / dashboard) se vycentrují na střed */
+    /* Jak se budou chovat objekty na stránce */
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -42,10 +43,45 @@ section {
 }
 
 .hidden {
-    /* schová prvek (přes "important" přebije jiné styly) */
+    /* schová prvek, !important přebije jiné styly */
     display: none !important;
 }
 
+#login-page {
+    /* Login se vycentruje na střed a má max šířku */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Formuláře */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 300px;
+}
+
+/* Popisky pro formuláře - menší a světlejší, aby nepřebíjely hlavní obsah */
+.hint {
+    font-size: 12px;
+    color: var(--muted);
+    min-height: 14px;
+}
+
+/* Když při přihlašování není stejné heslo ve dvojitém zadání */
+.input-error {
+    background: #f8d7da;
+    border: 1px solid var(--danger);
+}
+
+/* Když znovuzadané heslo odpovídá */
+.input-ok {
+    background: #d1e7dd;
+    border: 1px solid var(--success);
+}
+
+/* === TOP BAR (hlavička) === */
 .top-bar {
     width: 100%;
     height: 75px;
@@ -69,12 +105,20 @@ section {
     align-items: center;
 }
 
+/* Logo v top baru - kontrolovaná velikost, efekt při hoveru */
 .top-bar img {
     height: 70px;
     /* kontrolovaná velikost */
     width: auto;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
+.top-bar img:hover {
+    transform: scale(1.2);
+}
+
+/* Page navigace v top baru */
 .top-navigation {
     display: flex;
     gap: 10px;
@@ -98,6 +142,7 @@ section {
     display: inline-block;
 }
 
+/* Tooltip pro navigační položky - zobrazuje se při hoveru pod ikonou */
 .nav-item .tooltip {
     position: absolute;
     top: 120%;
@@ -120,12 +165,14 @@ section {
     opacity: 1;
 }
 
+/*Uživatel a tlačítko odhlásit*/
 .top-bar-right {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
+/* Tlačítko odhlásit má speciální styl, aby bylo výrazné, ale ne příliš agresivní */
 #logout {
     background: transparent;
     color: var(--primary-light);
@@ -137,17 +184,19 @@ section {
     color: var(--primary);
 }
 
+/* Při kliknutí na navigaci se hezky posune k sekci */
 html {
     scroll-behavior: smooth;
 }
 
-/*Nadpisy*/
+/*Titulek*/
 h1 {
     font-size: 30px;
     margin-top: 5px;
     margin-bottom: 5px;
 }
 
+/* Oddělovač sekcí - jednoduchá čára s mezerami */
 hr {
     border: none;
     /* zruší default styl */
@@ -156,21 +205,7 @@ hr {
     margin: 20px 0;
 }
 
-
-form {
-    /* Formuláře vypadají konzistentně a mají rozumnou šířku */
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 300px;
-}
-
-.hint {
-    font-size: 12px;
-    color: var(--muted);
-    min-height: 14px;
-}
-
+/* Vzhled inputů, selectů a tlačítek */
 input,
 select,
 button {
@@ -181,17 +216,14 @@ button {
     margin: 5px;
 }
 
+/* Při zaměření na input se zvýrazní border a odstraní defaultní outline */
 input:focus,
-select:focus {
+select:hover {
     outline: none;
     border-color: var(--primary);
 }
 
-select:hover {
-    border-color: var(--primary);
-}
-
-/*Buttons*/
+/* TLAČÍTKA - základní styl*/
 button {
     cursor: pointer;
     background: var(--primary);
@@ -206,6 +238,7 @@ button:hover {
     opacity: 0.9;
 }
 
+/*=== SEKCE PRO ZOBRAZENÍ STAVU ÚČTU === */
 .balance-section {
     display: flex;
     align-items: center;
@@ -216,6 +249,7 @@ button:hover {
     max-width: 600px;
     margin: 10px auto;
 }
+
 
 .balance-card {
     background: var(--card);
@@ -237,29 +271,33 @@ button:hover {
     transform: translateY(-2px);
 }
 
+/* Popisek nad stavem účtu - menší a světlejší, aby nepřebíjel hlavní číslo */
 .balance-label {
     font-size: 14px;
     color: var(--muted);
     margin-bottom: 5px;
 }
 
+/* Stav účtu - velké a výrazné číslo */
 #balance {
-    /* Zobrazení stavu účtu */
     font-size: 35px;
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 20px;
 }
 
+/* Když je zůstatek kladný, zbarví se zeleně */
 .balance-positive {
     color: var(--success);
 
 }
 
+/*Když je zůstatek záporný, zbarví se červeně*/
 .balance-negative {
     color: var(--danger);
 }
 
+/* Tlačítko pro export do CSV */
 #export-csv {
     cursor: pointer;
     background: var(--primary-light);
@@ -269,9 +307,8 @@ button:hover {
     transition: 0.2s;
 }
 
-
+/* MODÁLY - zadávání nových příjmů a výdajů */
 .modal {
-    /* Overlay pro modál (pozadí + vycentrování obsahu) */
     position: fixed;
     top: 0;
     left: 0;
@@ -284,8 +321,8 @@ button:hover {
     z-index: 1000;
 }
 
+/* Vnitřní vzhled modálu */
 .modal-content {
-    /* Vnitrni vzhled modalu */
     background: var(--card);
     padding: 30px;
     border-radius: 10px;
@@ -303,16 +340,16 @@ button:hover {
     border-color: var(--primary);
 }
 
+/* Tlačítka v modálu */
 .modal-buttons {
-    /* Tlačítka v modálu zarovnaná doprava */
     display: flex;
     gap: 10px;
     justify-content: flex-end;
     margin-top: 20px;
 }
 
+/* Základní vzhled tlačítek v modálu */
 .modal-buttons button {
-    /* Základní vzhled tlačítek v modálu */
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -320,14 +357,13 @@ button:hover {
 }
 
 .modal-buttons button[type="submit"] {
-    /* Primární akce (submit) = zelené tlačítko */
     background: var(--success);
     color: var(--primary-light);
 }
 
+/* Tlačítko zrušit - šedé */
 #close-expense-modal,
 #close-income-modal {
-    /* Zrušit tlačítka mají šedou barvu */
     background: var(--muted);
     color: var(--primary-light);
 }
@@ -341,47 +377,55 @@ button:hover {
     overflow: hidden;
 }
 
+/* Styl pro buňky tabulky */
 .tx-table th,
 .tx-table td {
     padding: 12px;
     border-bottom: 1px solid var(--border);
 }
 
+/* Hlavička tabulky - světlejší pozadí a tučný text */
 .tx-table thead {
     background: var(--primary-light);
     text-align: left;
     font-weight: 700;
 }
 
+/* Řádky tabulky - střídají se 2 odstíny šedé pro lepší čitelnost */
 .tx-table tbody tr:nth-child(even) {
     background: #fafafa;
 }
 
+/* Při hoveru se řádek zvýrazní světle modrou barvou */
 .tx-table tbody tr:hover {
     background: #f1f5f9;
 }
 
+/* Zarovnání částky doprava a tučný text */
 .tx-amount {
     text-align: right;
     white-space: nowrap;
     font-weight: 700;
 }
 
+/* Akční sloupec pro tlačítka "smazat" */
 .tx-action {
     text-align: center;
     width: 70px;
 }
 
+/* Příjmy mají zelenou barvu */
 .tx-income .tx-amount {
     color: var(--success);
 }
 
+/* Výdaje mají červenou barvu */
 .tx-expense .tx-amount {
     color: var(--danger);
 }
 
+/* Ikonka pro smazání transakce v seznamu */
 .delete-btn {
-    /* Ikonka/btn na smazání transakce v seznamu */
     border: 1px solid var(--border);
     font-size: 14px;
     background: #fee2e2;
@@ -394,11 +438,13 @@ button:hover {
     background: #fecaca;
 }
 
+/* Když není transakce, zobrazí se zpráva */
 #no-transactions-message {
     margin-top: 10px;
     color: var(--muted);
 }
 
+/*=== GRAFY ===*/
 .pie-grid {
     display: flex;
     gap: 20px;
@@ -409,6 +455,7 @@ button:hover {
     margin-top: 10px;
 }
 
+/* Každý pie-graf je v kartě s bílým pozadím, stínem a zaoblenými rohy */
 .pie-card {
     width: 360px;
     padding: 12px;
@@ -417,6 +464,7 @@ button:hover {
     background: var(--card);
 }
 
+/* Ovládací prvky pro pie-grafy - rozloženy vertikálně s mezerami */
 .pie-controls {
     display: flex;
     flex-direction: column;
@@ -424,30 +472,20 @@ button:hover {
     margin-bottom: 10px;
 }
 
+/* Ovládací prvky pro pie-grafy */
 .pie-controls select,
 .pie-controls input,
 .pie-controls button {
     width: 100%;
 }
 
+/* Rozložení pro zadávání vlastního rozsahu dat */
 .pie-custom-range {
     display: grid;
     grid-template-columns: auto 1fr;
     gap: 6px 10px;
     align-items: center;
 }
-
-.input-error {
-    background: #f8d7da;
-    border: 1px solid var(--danger);
-}
-
-.input-ok {
-    background: #d1e7dd;
-    border: 1px solid var(--success);
-}
-
-
 
 canvas {
     /* Grafům necháváme maximální šířku containeru */

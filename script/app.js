@@ -2,6 +2,344 @@
 //app.js - spravuje uzivatele a zobrazeni
 //========
 
+// načtení dat o uživateli z localStorage
+function getUserData() {
+    return JSON.parse(localStorage.getItem('userData')) || {};
+}
+
+// uložení dat uživatele do localStorage
+function saveUserData(data) {
+    localStorage.setItem('userData', JSON.stringify(data));
+}
+
+// zobrazeni přihlašovací obrazovky
+function showLogin() {
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("login-page").classList.remove("hidden");
+
+    // aby po odhlášení nezůstalo vyplněné jméno/heslo
+    const loginForm = document.getElementById("login-form");
+    if (loginForm) loginForm.reset();
+
+    const registerSection = document.getElementById("register-section");
+    if (registerSection) registerSection.classList.add("hidden");
+    const registerForm = document.getElementById("register-form");
+    if (registerForm) registerForm.reset();
+}
+
+// hash hesla --> pomocí SHA-256 (WebCrypto API)
+async function hashPassword(plainPassword) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plainPassword);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    //převod hex => string
+    return Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
+// funkce pro zobrazení úvodní obrazovky --> načte defaultní kategorie, update balance, transakce a grafy
+function showDashboard(username) {
+    document.getElementById("login-page").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+    document.getElementById("user-name").textContent = username;
+
+    initDefaultCategories();
+
+    // reset filtru pro aktuálně přihlášeného uživatele (jinak tam mohou zustat kategorie přidané ostatními uživateli)
+    loadCategories(null, "filter-category", false);
+
+    updateBalance();
+    showLastTransactions();
+    renderIncomeExpenseChart();
+    initCategoryPieCharts();
+}
+
+// MODALY: PŘIDÁNÍ TRANSAKCE
+// ukazat modal pro přidání výdaje
+function showExpenseModal() {
+    document.getElementById("expense-modal").classList.remove("hidden");
+    // nastaví datum na dnešní, pokud uživatel neuvede jiné
+    document.getElementById("expense-date").value = new Date().toISOString().split('T')[0];
+}
+
+// skrytí modalu pro přidání výdaje
+function hideExpenseModal() {
+    document.getElementById("expense-modal").classList.add("hidden");
+}
+
+// ukázání modalu pro příjmy
+function showIncomeModal() {
+    document.getElementById("income-modal").classList.remove("hidden");
+    document.getElementById("income-date").value = new Date().toISOString().split('T')[0];
+}
+
+// skrytí modalu pro přidání příjmu
+function hideIncomeModal() {
+    document.getElementById("income-modal").classList.add("hidden");
+}
+
+// EVENT LISTENERS: čekají až se něco stane a pak spustí funkci
+document.addEventListener("DOMContentLoaded", () => { // DOM = Document Object Model
+    const data = getUserData();
+    // pokud je uživatel přihlášený, zobraz dashboard
+    if (data.loggedIn) {
+        showDashboard(data.username);
+    }
+
+    // přihlášení
+    document.getElementById("login-form").addEventListener("submit", async (event) => {
+        event.preventDefault(); // zabrání znovunačtení začátku
+
+        const username = document.getElementById("username").value.trim(); // aby nezáleželo na mezerách
+        const password = document.getElementById("password").value.trim();
+
+        const user = JSON.parse(localStorage.getItem("user_" + username));
+
+        // kontrola, jestli uživatel existuje a jestli má heslo
+        if (!user || !user.passwordHash) {
+            alert("Neplatné jméno nebo heslo!");
+            return;
+        }
+
+        // porovnání hash hesla zadaného uživatelem s hashem uloženým v localStorage
+        const enteredHash = await hashPassword(password);
+        if (enteredHash === user.passwordHash) {
+            saveUserData({ ...user, loggedIn: true });
+            showDashboard(username);
+        } else {
+            alert("Neplatné jméno nebo heslo!");
+        }
+    });
+
+    // odhlášení
+    document.getElementById("logout").addEventListener("click", () => {
+        const data = getUserData();
+        data.loggedIn = false;
+        saveUserData(data);
+        showLogin();
+    });
+
+    // registrace nového uživatele --> zadání hesla a kontrola shody
+    const registerSection = document.getElementById("register-section");
+    const registerForm = document.getElementById("register-form");
+    const registerUsername = document.getElementById("register-username");
+    const registerPassword = document.getElementById("register-password");
+    const registerPasswordConfirm = document.getElementById("register-password-confirm");
+    const passwordMatchMessage = document.getElementById("password-match-message");
+
+    const updatePasswordMatchUi = () => {
+        if (!registerPassword || !registerPasswordConfirm) return;
+
+        const p1 = registerPassword.value;
+        const p2 = registerPasswordConfirm.value;
+
+        registerPasswordConfirm.classList.remove("input-error", "input-ok");
+        if (passwordMatchMessage) passwordMatchMessage.textContent = "";
+
+        // neindikujeme chybu, dokud uživatel nezačne psát potvrzení
+        if (p2.length === 0) return;
+
+        // pokud se hesla shodují, označíme pole zeleně a zobrazíme zprávu
+        if (p1 === p2) {
+            registerPasswordConfirm.classList.add("input-ok");
+            if (passwordMatchMessage) passwordMatchMessage.textContent = "Hesla se shodují.";
+        } else {
+            // pokud se hesla neshodují, označíme pole červeně a zobrazíme zprávu
+            registerPasswordConfirm.classList.add("input-error");
+            if (passwordMatchMessage) passwordMatchMessage.textContent = "Hesla se neshodují.";
+        }
+    };
+
+    // otevření registračního formuláře
+    document.getElementById("new-user").addEventListener("click", () => {
+        if (!registerSection || !registerForm) return;
+        registerForm.reset();
+        if (passwordMatchMessage) passwordMatchMessage.textContent = "";
+        if (registerPasswordConfirm) registerPasswordConfirm.classList.remove("input-error", "input-ok");
+        registerSection.classList.toggle("hidden");
+        if (!registerSection.classList.contains("hidden") && registerUsername) {
+            registerUsername.focus();
+        }
+    });
+
+    // zrušení registrace a návrat na přihlašovací obrazovku
+    document.getElementById("cancel-register").addEventListener("click", () => {
+        if (!registerSection || !registerForm) return;
+        registerForm.reset();
+        if (passwordMatchMessage) passwordMatchMessage.textContent = "";
+        if (registerPasswordConfirm) registerPasswordConfirm.classList.remove("input-error", "input-ok");
+        registerSection.classList.add("hidden");
+    });
+
+    // kontrola shody hesel při registraci - aktualizace UI
+    if (registerPassword) registerPassword.addEventListener("input", updatePasswordMatchUi);
+    if (registerPasswordConfirm) registerPasswordConfirm.addEventListener("input", updatePasswordMatchUi);
+
+    // odeslání registračního formuláře - vytvoření nového uživatele
+    if (registerForm) {
+        registerForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!registerUsername || !registerPassword || !registerPasswordConfirm) return;
+
+            const username = registerUsername.value.trim();
+            const p1 = registerPassword.value;
+            const p2 = registerPasswordConfirm.value;
+
+            if (!username || !p1 || !p2) return;
+
+            // kontrola shody hesel - pokud se neshodují, zobrazí se alert a registrace se nezdaří
+            if (p1 !== p2) {
+                updatePasswordMatchUi();
+                alert("Hesla se neshodují.");
+                return;
+            }
+
+            // kontrola, jestli uživatel s tímto jménem už existuje
+            if (localStorage.getItem("user_" + username)) {
+                alert("Tento uživatel už existuje!");
+                return;
+            }
+
+            // vytvoření nového uživatele - heslo se uloží jako hash
+            const passwordHash = await hashPassword(p1);
+            localStorage.setItem(
+                "user_" + username,
+                JSON.stringify({
+                    username: username,
+                    passwordHash: passwordHash,
+                    incomes: 0,
+                    expenses: 0
+                })
+            );
+
+            // po úspěšné registraci se uživatel automaticky přihlásí a zobrazí se dashboard
+            if (registerSection) registerSection.classList.add("hidden");
+            registerForm.reset();
+            if (passwordMatchMessage) passwordMatchMessage.textContent = "";
+            if (registerPasswordConfirm) registerPasswordConfirm.classList.remove("input-error", "input-ok");
+
+            saveUserData({ username: username, loggedIn: true });
+            showDashboard(username);
+        });
+    }
+
+    // export do CSV
+    document.getElementById("export-csv").addEventListener("click", exportToCSV);
+
+    // načtení kategorii při načtení dashboardu
+    loadCategories("expense", "expense-category"); // formulář
+    loadCategories("income", "income-category");   // formulář
+    loadCategories(null, "filter-category", false); // filtr
+
+    // přidání nové kategorie
+    enableNewCategory("expense-category", "expense");
+    enableNewCategory("income-category", "income");
+
+    // otevření modalu pro přidání výdaje
+    document.getElementById("add-expense").addEventListener("click", () => {
+        initDefaultCategories();
+        loadCategories("expense", "expense-category");
+        showExpenseModal();
+    });
+
+    // zavření modalu pro přidání výdaje
+    document.getElementById("close-expense-modal").addEventListener("click", hideExpenseModal);
+
+    // vyplnění modalu pro přidání výdaje
+    document.getElementById("expense-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const amount = parseFloat(document.getElementById("expense-amount").value);
+        const date = document.getElementById("expense-date").value;
+        const place = document.getElementById("expense-place").value;
+        const category = document.getElementById("expense-category").value;
+        const description = document.getElementById("expense-description").value;
+
+        if (amount > 0) {
+            addExpense(amount, date, place, category, description);
+            alert("Výdaj uložen!");
+            hideExpenseModal();
+            // vyčistit formulář
+            document.getElementById("expense-form").reset();
+        } else {
+            alert("Neplatná částka!");
+        }
+    });
+
+    // otevřít modal pro příjem
+    document.getElementById("add-income").addEventListener("click", () => {
+        initDefaultCategories();
+        loadCategories("income", "income-category");
+        showIncomeModal();
+    });
+
+    // zavřít modal pro příjem
+    document.getElementById("close-income-modal").addEventListener("click", hideIncomeModal);
+
+    // vyplnění modalu pro přidání příjmu
+    document.getElementById("income-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const amount = parseFloat(document.getElementById("income-amount").value);
+        const date = document.getElementById("income-date").value;
+        const category = document.getElementById("income-category").value;
+        const description = document.getElementById("income-description").value;
+
+        if (amount > 0) {
+            addIncome(amount, date, category, description);
+            alert("Příjem uložen!");
+            hideIncomeModal();
+            document.getElementById("income-form").reset();
+        } else {
+            alert("Neplatná částka!");
+        }
+    });
+
+    // zobrazit nebo schovat pokročilé filtry
+    document.getElementById("filters").addEventListener("click", () => {
+        const filters = document.getElementById("advanced-filters");
+        filters.classList.toggle("hidden"); // toggle = switch mezi 2 možnostmi (hide x show)
+    });
+
+    // aplikace filtru a zobrazení transakcí
+    // limit a typ chceme renderovat hned po změně výběru
+    document.getElementById("transaction-limit").addEventListener("change", showTransactions);
+    document.getElementById("transaction-limit").addEventListener("input", showTransactions);
+    document.getElementById("transaction-type").addEventListener("change", showTransactions);
+    document.getElementById("transaction-type").addEventListener("input", showTransactions);
+
+    // ostatní (pokročilé) filtry hromadně až po kliknutí na "Použít filtry"
+    document.getElementById("apply-filters").addEventListener("click", showTransactions);
+
+    // reset filtrů
+    document.getElementById("reset-filters").addEventListener("click", () => {
+        document.getElementById("transaction-limit").value = "10";
+        document.getElementById("transaction-type").value = "all";
+        document.getElementById("filter-category").value = "";
+        document.getElementById("filter-date-from").value = "";
+        document.getElementById("filter-date-to").value = "";
+        document.getElementById("filter-min").value = "";
+        document.getElementById("filter-max").value = "";
+        document.getElementById("filter-search").value = "";
+
+        showTransactions();
+
+    });
+
+    // zobrazení a update grafu příjmů a výdajů
+    document.getElementById("update-chart").addEventListener("click", () => {
+        const aggregate = document.getElementById("chart-interval-type").value;
+        const dateFrom = document.getElementById("chart-date-from").value || null;
+        const dateTo = document.getElementById("chart-date-to").value || null;
+        renderIncomeExpenseChart(aggregate, dateFrom, dateTo);
+    });
+
+});
+
+
+//========
+//app.js - spravuje uzivatele a zobrazeni
+//========
+
 //načtení data o uživateli z local storage
 function getUserData() {
     return JSON.parse(localStorage.getItem('userData')) || {};

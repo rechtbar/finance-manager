@@ -2,7 +2,7 @@
 //charts.js - spravuje grafy
 //========
 
-//vygenerovani bar grafu
+// vygenerovani GRAFU PRO PŘÍJMY A VÝDAJE V ČASE - SLOUPCOVÝ GR
 function renderIncomeExpenseChart(aggregate = "month",
     dateFrom = null, dateTo = null) {
     const transactions = getTransactions().map
@@ -10,7 +10,7 @@ function renderIncomeExpenseChart(aggregate = "month",
 
     const now = new Date();
 
-    //vychozi rozsah - poslednich 6 dnu/tydnu/mesicu/let
+    // výchozí rozsah - poslednich 6 dnů/týdnů/měsíců/let
     let startDate, endDate = dateTo ? new Date(dateTo) : now;
 
     if (!dateFrom) {
@@ -25,34 +25,40 @@ function renderIncomeExpenseChart(aggregate = "month",
         startDate = new Date(dateFrom);
     }
 
-    //labels a popisky
-    const labels = []; //oznaceni jednotlivich useku na ose x
-    const incomeData = []; //hodnoty prijmu na ose y
-    const expenseData = []; //hodnoty vydaju na ose y
+
+    // data pro graf 
+    const labels = []; // označení jednotlivých úseků na ose x
+    const incomeData = []; // hodnoty příjmu na ose y
+    const expenseData = []; // hodnoty výdajů na ose y
 
     let current = new Date(startDate);
 
+    // iterace po jednotlivých úsecích (dnech/týdnech/měsících/letech)
     while (current <= endDate) {
         let next;
         let label;
 
-        //ruzne moznosti grafu
+        // různé možnosti grafu
         switch (aggregate) {
+            // pro dny přidáváme po 1 dni, onačení je datum ve formátu "D. M. RRRR"
             case "day":
                 next = new Date(current); next.setDate(current.getDate() + 1);
                 label = current.toLocaleDateString("cs-CZ");
                 break;
 
+            // pro týdny přidáváme po 7 dnech, označení je "Týden X" - kolikátý týden v roce
             case "week":
                 next = new Date(current); next.setDate(current.getDate() + 7);
                 label = `Týden ${getWeekNumber(current)}`;
                 break;
 
+            // pro měsíce přidáváme po 1 měsíci, označení je "Měsíc RRRR" - zkráceně měsíc a rok
             case "month":
                 next = new Date(current.getFullYear(), current.getMonth() + 1, 1);
                 label = current.toLocaleString("cs-CZ", { month: "short", year: "2-digit" });
                 break;
 
+            // pro roky přidáváme po 1 roce, označení je "RRRR" - rok
             case "year":
                 next = new Date(current.getFullYear() + 1, 0, 1);
                 label = current.getFullYear().toString();
@@ -61,12 +67,14 @@ function renderIncomeExpenseChart(aggregate = "month",
 
         labels.push(label);
 
+        // pro aktuální úsek spočítáme součet příjmů a výdajů
         const periodTransactions = transactions.filter(t => t.date >= current && t.date < next);
         const monthIncome = periodTransactions.filter(t => t.type === "income")
             .reduce((sum, t) => sum + t.amount, 0);
         const monthExpense = periodTransactions.filter(t => t.type === "expense")
             .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
+        // uložíme data pro graf
         incomeData.push(monthIncome);
         expenseData.push(monthExpense);
 
@@ -76,14 +84,15 @@ function renderIncomeExpenseChart(aggregate = "month",
 
     const ctx = document.getElementById("income-expense-chart").getContext("2d");
 
-    // pokud uz graf existuje, smazeme ho - abychom nevykreslovali 2 pres sebe
+    // pokud už graf existuje, smažeme ho - abychom nevykreslovali 2 přes sebe
     if (window.incomeExpenseChart) window.incomeExpenseChart.destroy();
 
-    //samotne vykreslovani grafu, predtim se ziskavaly data
+    //samotné vykreslovani grafu
     window.incomeExpenseChart = new Chart(ctx, {
         type: "bar",
         data: {
             labels: labels,
+            // 2 sady dat - příjmy a výdaje
             datasets: [
                 {
                     label: "Příjmy",
@@ -98,10 +107,22 @@ function renderIncomeExpenseChart(aggregate = "month",
             ]
         },
         options: {
+            // aby se graf přizpůsobil velikosti obrazovky
             responsive: true,
+            // nastavení pro legendu, název grafu a tooltipy
             plugins: {
                 legend: { position: "top" },
-                title: { display: true, text: "Příjmy a výdaje v čase" }
+                title: { display: true, text: "Příjmy a výdaje v čase" },
+                tooltip: {
+                    // vlastní formátování tooltipu, aby se zobrazovala částka s "Kč"
+                    callbacks: {
+                        label: function (context) {
+                            const label = context.dataset.label || "";
+                            const value = context.parsed.y;
+                            return `${label}: ${formatKc(value)}`;
+                        }
+                    }
+                }
 
             },
             scales: { y: { beginAtZero: true } }
@@ -109,7 +130,7 @@ function renderIncomeExpenseChart(aggregate = "month",
     });
 }
 
-//pomocna funkce pro prevod datumu na format pro input pole
+// pomocná funkce pro převod data na formát pro input type="date" (YYYY-MM-DD)
 function toDateInputValue(d) {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -117,7 +138,8 @@ function toDateInputValue(d) {
     return `${yyyy}-${mm}-${dd}`;
 }
 
-//rozsahy pro predvolene obdobi
+// GRAF PRO PŘÍJMY A VÝDAJE PODLE KATEGORIÍ - KOLÁČOVÝ GRAF
+// rozsahy pro předvolené období
 function getPresetRange(preset) {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -157,11 +179,11 @@ function getPresetRange(preset) {
     }
 }
 
-// agregace transakci podle kategorie
+// agregace transakcí podle kategorie
 function aggregateByCategory(transactions, type, from, to) {
     const totals = new Map();
 
-    // agregace transakci
+    // projdeme všechny transakce a sečteme částky podle kategorie, přičemž zohledníme typ a datum
     transactions.forEach((t) => {
         if (t.type !== type) return;
         if (!t.date) return;
@@ -178,7 +200,7 @@ function aggregateByCategory(transactions, type, from, to) {
         totals.set(category, (totals.get(category) || 0) + amount);
     });
 
-    // seřadit kategorie sestupně podle částky
+    // seřazení kategorií sestupně podle částky
     const entries = Array.from(totals.entries())
         .sort((a, b) => b[1] - a[1]); // [category, total]
 
@@ -187,22 +209,24 @@ function aggregateByCategory(transactions, type, from, to) {
     return { labels, data };
 }
 
-//pomocna funkce pro formatovani ceny
+// pomocná funkce pro formatování ceny
 function formatKc(value) {
     return `${Math.round(value)} Kč`;
 }
 
-//vykresleni nebo aktualizace kruhového grafu
+// vykreslení nebo aktualizace koláčového grafu (typ: donut)
 function createOrUpdateDoughnutChart(storageKey, canvasId, title, labels, data) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
+    // pokud už graf existuje, smažeme ho - abychom nevykreslovali 2 přes sebe
     if (window[storageKey]) window[storageKey].destroy();
 
     const total = data.reduce((s, v) => s + v, 0);
     const colors = labels.map((_, i) => `hsl(${(i * 47) % 360} 70% 55%)`);
 
+    // samotné vykreslovani grafu
     window[storageKey] = new Chart(ctx, {
         type: "doughnut",
         data: {
@@ -215,7 +239,9 @@ function createOrUpdateDoughnutChart(storageKey, canvasId, title, labels, data) 
             ]
         },
         options: {
+            // aby se graf přizpůsobil velikosti obrazovky
             responsive: true,
+            // nastavení pro legendu, název grafu a tooltipy
             plugins: {
                 legend: { position: "bottom" },
                 title: { display: true, text: title },
@@ -234,7 +260,7 @@ function createOrUpdateDoughnutChart(storageKey, canvasId, title, labels, data) 
     });
 }
 
-//inicializace kruhového grafu pro kategorie
+// inicializace kruhového grafu pro kategorie
 function initCategoryPieWidget({
     type,
     presetId,
@@ -246,6 +272,7 @@ function initCategoryPieWidget({
     storageKey,
     title
 }) {
+    // získáme reference na všechny potřebné elementy
     const presetEl = document.getElementById(presetId);
     const fromEl = document.getElementById(fromId);
     const toEl = document.getElementById(toId);
@@ -253,8 +280,10 @@ function initCategoryPieWidget({
     const emptyEl = document.getElementById(emptyId);
     const canvasEl = document.getElementById(canvasId);
 
+    // pokud chybí některý z elementů, neděláme nic (např. jsme na stránce bez grafu)
     if (!presetEl || !fromEl || !toEl || !updateEl || !emptyEl || !canvasEl) return;
 
+    // funkce pro vykreslení grafu podle aktuálního nastavení (předvolba nebo vlastní období)
     const render = () => {
         const preset = presetEl.value;
         let from = null;
@@ -272,10 +301,12 @@ function initCategoryPieWidget({
         const transactions = getTransactions();
         const result = aggregateByCategory(transactions, type, from, to);
 
+        // pokud nejsou žádná data, schováme canvas a zobrazíme zprávu o prázdnosti
         const hasData = result.data.length > 0;
         emptyEl.classList.toggle("hidden", hasData);
         canvasEl.classList.toggle("hidden", !hasData);
 
+        // pokud nejsou žádná data, zničíme případný existující graf a nebudeme nic vykreslovat
         if (!hasData) {
             if (window[storageKey]) {
                 window[storageKey].destroy();
@@ -284,9 +315,11 @@ function initCategoryPieWidget({
             return;
         }
 
+        // pokud jsou data, vykreslíme nebo aktualizujeme graf
         createOrUpdateDoughnutChart(storageKey, canvasId, title, result.labels, result.data);
     };
 
+    // funkce pro povolení nebo zakázání inputů pro vlastní období podle výběru předvolby
     const updateCustomEnabled = () => {
         const isCustom = presetEl.value === "custom";
         fromEl.disabled = !isCustom;
@@ -298,8 +331,9 @@ function initCategoryPieWidget({
         updateEl.classList.toggle("hidden", !isCustom);
     };
 
+    // funkce pro nastavení výchozí předvolby a vykreslení grafu
     const setDefaultAndRender = () => {
-        // default = posledních 30 dní (poslední měsíc)
+        // default = posledních 30 dní
         presetEl.value = "last30";
         updateCustomEnabled();
 
@@ -311,10 +345,11 @@ function initCategoryPieWidget({
         render();
     };
 
+    // přidáme event listenery pro změnu předvolby a kliknutí na tlačítko aktualizace
     presetEl.addEventListener("change", () => {
         updateCustomEnabled();
 
-        // U předvoleb vykreslíme hned, u vlastního období čekáme na tlačítko
+        // u předvoleb vykreslíme hned, u vlastního období čekáme na tlačítko "Aktualizovat graf"
         if (presetEl.value !== "custom") {
             render();
         }
@@ -322,18 +357,17 @@ function initCategoryPieWidget({
 
     updateEl.addEventListener("click", render);
 
-    // Uložíme si kontrolky pro možnost refresh z jiných skriptů (např. po přidání transakce)
+    // kontrolky pro možnost refresh z jiných skriptů
     if (!window.__categoryPieWidgets) window.__categoryPieWidgets = {};
     window.__categoryPieWidgets[type] = { render, setDefaultAndRender };
 
     setDefaultAndRender();
 }
 
-//inicializace kruhových grafů pro kategorie výdajů a příjmů
+// inicializace kruhových grafů pro kategorie výdajů a příjmů
 function initCategoryPieCharts() {
-    //if (window.__categoryPieChartsInitialized) return;
-    //window.__categoryPieChartsInitialized = true;
 
+    // graf pro výdaje podle kategorií
     initCategoryPieWidget({
         type: "expense",
         presetId: "expense-pie-preset",
@@ -346,6 +380,7 @@ function initCategoryPieCharts() {
         title: "Výdaje podle kategorií"
     });
 
+    // graf pro příjmy podle kategorií
     initCategoryPieWidget({
         type: "income",
         presetId: "income-pie-preset",
@@ -359,7 +394,7 @@ function initCategoryPieCharts() {
     });
 }
 
-//pomocna funkce pro cislo tydnu - kolikaty tyden v roce
+// pomocná funkce pro číslo týdnu - kolikátý týden v roce
 function getWeekNumber(d) {
     const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     const dayNum = (date.getDay() + 6) % 7; //pon = 0
@@ -369,7 +404,7 @@ function getWeekNumber(d) {
     return 1 + Math.round(diff / (7 * 24 * 60 * 60 * 1000));
 }
 
-//inicializace pri nacteni stranky
+// inicializace při načtení stránky
 document.addEventListener("DOMContentLoaded", () => {
     initCategoryPieCharts();
 });

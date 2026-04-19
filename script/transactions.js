@@ -2,7 +2,7 @@
 //transactions.js - spravuje transakce
 //=========
 
-//fromatovani castky - pridani mezer pro tisice (CZK)
+// formatování částky - přidání mezer pro tisíce (CZK)
 function formatMoney(amount) {
     return new Intl.NumberFormat("cs-CZ", {
         style: "currency",
@@ -12,21 +12,21 @@ function formatMoney(amount) {
     }).format(amount);
 }
 
-//nacteni transakci s localStorage
+// načtení transakcí z localStorage
 function getTransactions() {
     const data = getUserData();
-    if (!data.username) return []; //kdyz neni username v ulozisti
+    if (!data.username) return []; //když není username v úložišti, return prázdný seznam
     return JSON.parse(localStorage.getItem('transactions_' + data.username)) || [];
 }
 
-//ulozit transakce do localStorage
+// uložit transakce do localStorage
 function saveTransactions(transactions) {
     const data = getUserData();
     if (!data.username) return;
     localStorage.setItem('transactions_' + data.username, JSON.stringify(transactions));
 }
 
-//nacteni defaultnich kategorii pro kazdeho usera zvlast
+// načtení defaultních kategorií pro každého uživatele zvlášť (aby se nemíchaly napříč uživateli)
 function initDefaultCategories() {
     const data = getUserData();
     if (!data.username) return;
@@ -49,12 +49,8 @@ function initDefaultCategories() {
         "Ostatní příjmy"
     ];
 
-    // Změna dřívější obecné kategorie "Ostatní" -> správný text pro typ.
-    // (když už ji má uživatel uloženou v localStorage, a teď chceš používat "Ostatní výdaje/příjmy")
+    // přidání defaultních kategorií do localStorage, pokud tam ještě nejsou
     let expenseCategories = JSON.parse(localStorage.getItem(expenseKey)) || [];
-    if (expenseCategories.includes("Ostatní") && !expenseCategories.includes("Ostatní výdaje")) {
-        expenseCategories = expenseCategories.map(c => c === "Ostatní" ? "Ostatní výdaje" : c);
-    }
     defaultExpense.forEach(c => {
         if (!expenseCategories.includes(c)) expenseCategories.push(c);
     });
@@ -62,9 +58,6 @@ function initDefaultCategories() {
     localStorage.setItem(expenseKey, JSON.stringify(expenseCategories));
 
     let incomeCategories = JSON.parse(localStorage.getItem(incomeKey)) || [];
-    if (incomeCategories.includes("Ostatní") && !incomeCategories.includes("Ostatní příjmy")) {
-        incomeCategories = incomeCategories.map(c => c === "Ostatní" ? "Ostatní příjmy" : c);
-    }
     defaultIncome.forEach(c => {
         if (!incomeCategories.includes(c)) incomeCategories.push(c);
     });
@@ -72,20 +65,20 @@ function initDefaultCategories() {
     localStorage.setItem(incomeKey, JSON.stringify(incomeCategories));
 }
 
-//načtení kategorií z local storage
+// načtení kategorií z localStorage
 function getCategories(type) {
     const data = getUserData();
     if (!data.username) return [];
     return JSON.parse(localStorage.getItem("categories_" + type + "_" + data.username)) || [];
 }
 
-//ulozeni nove kategorie
+// uložení nové kategorie
 function saveCategory(type, category) {
     const data = getUserData();
     if (!data.username) return;
     const categories = getCategories(type);
 
-    if (!categories.includes(category)) { //kontrola jestli uz kategorie neexistuje
+    if (!categories.includes(category)) { // kontrola jestli už kategorie neexistuje
         categories.push(category);
         localStorage.setItem(
             "categories_" + type + "_" + data.username,
@@ -94,13 +87,13 @@ function saveCategory(type, category) {
     }
 }
 
-//nacteni kategorie do selectu
+// načtení kategorií do selectu pro filtrování a pro modální okna
 function loadCategories(type, selectId, includeNew = true) {
 
     const select = document.getElementById(selectId);
     if (!select) return;
 
-    //vycisti select a znovu ho naplni
+    // vyčistí select a znovu ho naplní
     select.innerHTML = "";
     const addOption = (value, text) => {
         const option = document.createElement("option");
@@ -110,24 +103,24 @@ function loadCategories(type, selectId, includeNew = true) {
         return option;
     };
 
-    //placeholder do modalu - aby tam nebyl jen prvni z vyberu
+    // placeholder do modalu - aby tam nebyl vidět první z výběru
     if (selectId === "expense-category" || selectId === "income-category") {
         addOption("", "Vyberte kategorii");
     }
 
-    //pro filtr chceme take kategorii "vse"
+    // pro filtr chceme také kategorii "vše"
     if (selectId === "filter-category" && includeNew === false) {
         addOption("", "Vše");
     }
 
-    //nacteni kategorii - pro filtr spojime prijmy a vydaje
+    // načtení kategorií - pro filtr spojíme příjmy a výdaje
     let categories = [];
     if (selectId === "filter-category") {
         categories = [
             ...getCategories("expense"),
             ...getCategories("income")
         ];
-        //odstraneni duplicit
+        // odstraněni duplicit - pokud nějaká kategorie příjmu = kategorie výdajů
         categories = [...new Set(categories)];
     } else {
         categories = getCategories(type);
@@ -142,7 +135,7 @@ function loadCategories(type, selectId, includeNew = true) {
     }
 }
 
-//vytvoreni nove kategorie
+// vytvoření nové kategorie
 function enableNewCategory(selectId, type) {
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -155,14 +148,14 @@ function enableNewCategory(selectId, type) {
             if (newCategory) {
                 saveCategory(type, newCategory);
 
-                //znovu nacte kategorie aby se vse aktualizovalo
+                // znovu načte kategorie, aby se vše aktualizovalo
                 loadCategories(type, selectId);
                 this.value = newCategory;
 
-                //pokud je to select filtru, pridame ho tam rovnou
+                // přidáme rovnou do filtru transakcí (uživatel nemusí reloadovat stránku)
                 const filterSelect = document.getElementById("filter-category");
 
-                //prida i do seznamu na filtrovani
+                // přida i do seznamu na filtrování, pokud tam ještě není
                 if (filterSelect && ![...filterSelect.options].some(o => o.value === newCategory)) {
                     const filterOption = document.createElement("option");
                     filterOption.value = newCategory;
@@ -177,22 +170,23 @@ function enableNewCategory(selectId, type) {
     });
 }
 
-//pridat vydaj
+// modál pro přidání výdaje - vytvoří objekt transakce a uloží ho do localStorage
 function addExpense(amount, date, place, category, description) {
     const transactions = getTransactions();
     transactions.push({
         type: 'expense',
-        amount: -amount, //zaporne cislo = je to vydaj
+        amount: -amount, // záporné číslo = je to výdaj
         date,
         place,
         category,
         description,
-        timestamp: new Date().getTime() //id podle ktereho se budou rozlisovat
+        timestamp: new Date().getTime() // id podle ktereho se budou rozlišovat
     });
     saveTransactions(transactions);
     updateBalance();
     showTransactions();
-    renderIncomeExpenseChart(); //rovnou updatne graf
+    renderIncomeExpenseChart(); // rovnou updatne graf příjmů a výdajů
+    initCategoryPieCharts(); // aktualizace koláčových grafů
 
     // aktualizace koláčového grafu výdajů na defaultní období
     if (window.__categoryPieWidgets?.expense?.setDefaultAndRender) {
@@ -200,7 +194,7 @@ function addExpense(amount, date, place, category, description) {
     }
 }
 
-//prijem
+// modál pro přidání příjmu - vytvoří objekt transakce a uloží ho do localStorage
 function addIncome(amount, date, category, description) {
     const transactions = getTransactions();
     transactions.push({
@@ -215,6 +209,7 @@ function addIncome(amount, date, category, description) {
     updateBalance();
     showTransactions();
     renderIncomeExpenseChart();
+    initCategoryPieCharts();
 
     // aktualizace koláčového grafu příjmů na defaultní období
     if (window.__categoryPieWidgets?.income?.setDefaultAndRender) {
@@ -222,7 +217,7 @@ function addIncome(amount, date, category, description) {
     }
 }
 
-//balance update
+// balance update
 function updateBalance() {
     const data = getUserData();
     if (!data.username) return;
@@ -237,7 +232,8 @@ function updateBalance() {
         },
         { expense: 0, income: 0 }
     );
-    // Vydaje zaporne --> proto Math.abs, aby se mohly porovnavat s prijmy
+
+    // záporné hodnoty --> proto Math.abs, aby se mohly porovnávat s příjmy
     const totalExpense = Math.abs(totals.expense);
     const totalIncome = totals.income;
 
@@ -251,10 +247,10 @@ function updateBalance() {
 
         balanceEl.textContent = formatMoney(balance);
 
-        // odstraneni starych trid
+        // odstraneění starých tříd
         balanceEl.classList.remove("balance-positive", "balance-negative");
 
-        // pridani nove podle stavu --> aby se mohlo zbarvit zelene/cervene
+        // přidání nové podle stavu --> aby se mohlo zbarvit zeleně/červeně
         if (balance > 0) {
             balanceEl.classList.add("balance-positive");
         } else if (balance < 0) {
@@ -263,11 +259,11 @@ function updateBalance() {
     }
 }
 
-//vykreslení posledních posledních 5 transakcí
+// vykreslení tabulky transakcí - posledních 5 transakcí
 function showLastTransactions() {
     const transactions = getTransactions();
     const sorted = [...transactions].sort((a, b) => {
-        // Primárně řadíme podle data - nejnovejsi nahore (pokud ve stejny dan, tak podle timestampu)
+        // primárně řadíme podle data - nejnovější nahoře (pokud ve stejný den, tak podle timestampu)
         const dateDiff = new Date(b.date) - new Date(a.date);
         if (dateDiff !== 0) return dateDiff;
         return (b.timestamp || 0) - (a.timestamp || 0);
@@ -276,7 +272,7 @@ function showLastTransactions() {
     renderTransactions(last5);
 }
 
-//vygenerovani seznamu transakci
+// vygenerování seznamu transakcí
 function renderTransactions(transactions) {
     const table = document.getElementById("transaction-table");
     const tbody = document.getElementById("transaction-tbody");
@@ -284,6 +280,7 @@ function renderTransactions(transactions) {
 
     tbody.innerHTML = "";
 
+    // zobrazení zprávy, když nejsou žádné transakce
     const emptyMessage = document.getElementById("no-transactions-message");
     if (emptyMessage) {
         emptyMessage.classList.toggle("hidden", transactions.length !== 0);
@@ -292,6 +289,7 @@ function renderTransactions(transactions) {
     table.classList.toggle("hidden", transactions.length === 0);
     if (transactions.length === 0) return;
 
+    // pro každou transakci vytvoří řádek v tabulce
     transactions.forEach(t => {
         const tr = document.createElement("tr");
         tr.classList.add(t.type === "income" ? "tx-income" : "tx-expense");
@@ -302,6 +300,7 @@ function renderTransactions(transactions) {
         const amountValue = Number(t.amount) || 0;
         const formattedAmount = formatMoney(amountValue);
 
+        // pokud není datum, kategorie, místo nebo popis, zobrazí se "----"
         tr.innerHTML = `
             <td class="tx-date">${t.date || "----"}</td>
             <td class="tx-category">${t.category || "----"}</td>
@@ -311,7 +310,7 @@ function renderTransactions(transactions) {
             <td class="tx-action"><button class="delete-btn" type="button">❌</button></td>
         `;
 
-        // smazani transakce - potvrzeni
+        // smazání transakce - potvrzení akce a následné smazání podle timestampu
         tr.querySelector(".delete-btn").addEventListener("click", () => {
             if (confirm("Opravdu chcete tuto transakci smazat?")) {
                 deleteTransaction(t.timestamp);
@@ -322,7 +321,7 @@ function renderTransactions(transactions) {
     });
 }
 
-//vykresleni transakci - podle filtru
+// vykreslení transakcí - podle filtru
 function showTransactions() {
     let transactions = getTransactions();
     const limit = document.getElementById("transaction-limit").value;
@@ -334,17 +333,17 @@ function showTransactions() {
     const max = document.getElementById("filter-max").value;
     const search = document.getElementById("filter-search").value.toLowerCase();
 
-    //typ
+    // typ transakce
     if (type !== "all") {
         transactions = transactions.filter(t => t.type === type);
     }
 
-    //kategorie
+    // kategorie
     if (category !== "") {
         transactions = transactions.filter(t => t.category === category);
     }
 
-    //datum od - do
+    // datum od - do
     if (dateFrom) {
         const from = new Date(dateFrom)
         transactions = transactions.filter(t => new Date(t.date) >= from);
@@ -355,7 +354,7 @@ function showTransactions() {
         transactions = transactions.filter(t => new Date(t.date) <= to);
     }
 
-    //částka
+    // částka minimum a maximum - porovnává se absolutní hodnota, aby se mohly porovnávat i výdaje (které jsou záporné) s příjmy
     if (min) {
         const minValue = parseFloat(min);
         transactions = transactions.filter(t => Math.abs(t.amount) >= minValue);
@@ -366,22 +365,22 @@ function showTransactions() {
         transactions = transactions.filter(t => Math.abs(t.amount) <= maxValue);
     }
 
-    //vyhledavani
+    // vyhledávání
     if (search) {
         transactions = transactions.filter(t =>
-            t.place && t.place.toLowerCase().includes(search) ||
-            t.description && t.description.toLowerCase().includes(search)
+            (t.place && t.place.toLowerCase().includes(search)) ||
+            (t.description && t.description.toLowerCase().includes(search))
         );
     }
 
-    //řazení
+    // řazení - nejdříve podle data (novější nahoře), pokud jsou ve stejný den, tak podle timestampu
     transactions.sort((a, b) => {
         const dateDiff = new Date(b.date) - new Date(a.date);
         if (dateDiff !== 0) return dateDiff;
         return (b.timestamp || 0) - (a.timestamp || 0);
     });
 
-    //limit
+    // limit - pokud není "all", tak ořízne seznam transakcí na zvolený počet
     if (limit !== "all") {
         transactions = transactions.slice(0, limit);
     }
@@ -389,7 +388,7 @@ function showTransactions() {
     renderTransactions(transactions);
 }
 
-//smazani transakce
+// smazání transakce
 function deleteTransaction(timestamp) {
     let transactions = getTransactions();
     transactions = transactions.filter(t => t.timestamp !== timestamp);
@@ -400,7 +399,7 @@ function deleteTransaction(timestamp) {
     initCategoryPieCharts(); //aby se aktualizovaly i kolacove grafy po smazani transakce
 }
 
-//export do csv (comma separated values)
+// export do CSV (=Comma Separated Values) -> vytvoří soubor s transakcemi, který si uživatel může stáhnout
 function exportToCSV() {
     //získání transakcí
     const transactions = getTransactions();
@@ -409,7 +408,7 @@ function exportToCSV() {
         return;
     }
 
-    //usporádání transakcí
+    // uspořádání transakcí - stejné jako v tabulce
     let csv = "Datum,Kategorie,Místo,Popis,Částka,Typ\n";
     transactions.forEach(t => {
         const row = [
@@ -421,10 +420,10 @@ function exportToCSV() {
             t.type
         ];
 
-        csv += row.map(value => `${value}`).join(",") + "\n";
+        csv += row.map(value => `"${value}"`).join(",") + "\n";
     });
 
-    //vytvoření souboru (blob - soubor v paměti)
+    // vytvoření souboru (blob - soubor v paměti)
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
 

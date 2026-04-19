@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Finance manager</title>
+    <title>Finance manager</title> <!-- Název projektu -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 
@@ -12,19 +12,23 @@
 <body>
     <!-- Login sekce, skryje se po prihlaseni -->
     <div id="login-page" class="page">
-        <h1>Finance manager</h1>
+        <h1>Finance Manager</h1>
+
         <div>
+            <!-- Logo projektu -->
             <img src="graphics/logo.png" alt="Kyblík s penězi" width="200" />
         </div>
+
         <h1>Přihlášení</h1>
         <form id="login-form">
             <input type="text" id="username" placeholder="Uživatelské jméno" required>
-            <input type="password" id="password" placeholder="Heslo" required>
+            <!-- Povinné pole pro zadání jména uživatele -->
+            <input type="password" id="password" placeholder="Heslo" required> <!--Povinné pole pro zadání hesla -->
             <button type="submit">Přihlásit se</button>
             <button type="button" id="new-user">Nový uživatel</button>
         </form>
 
-        <!-- Registrace noveho uzivatele, zobrazi se po kliknuti na "New user" -->
+        <!-- Registrace nového uživatele, zobrazí se po kliknutí na "Nový uživatel" -->
         <div id="register-section" class="hidden">
             <h2>Registrace</h2>
             <form id="register-form">
@@ -38,12 +42,15 @@
                 </div>
             </form>
         </div>
+
     </div>
-    <!-- Uvodni stranka, objevi se po uspesnem prihlaseni -->
+    <!-- Hlavní stránka, objeví se po úspěšném přihlášení -->
     <div id="dashboard" class="page hidden">
         <header class="top-bar">
             <img src="graphics/logo.png" alt="Kyblík s penězi" width="30" />
             <h1 class="top-bar-title">Finance Manager</h1>
+
+            <!-- Navigační odkazy -->
             <div class="top-navigation">
                 <a href="#transactions-section" class="nav-item">
                     <img src="graphics/transaction-icon.png" alt="Transakce">
@@ -51,12 +58,12 @@
                 </a>
 
                 <a href="#bar-graph-section" class="nav-item">
-                    <img src="graphics/bar-graph-icon.png" alt="Graf">
+                    <img src="graphics/bar-graph-icon.png" alt="Příjmy a výdaje v čase">
                     <span class="tooltip">Příjmy a výdaje v čase</span>
                 </a>
 
                 <a href="#pie-chart-section" class="nav-item">
-                    <img src="graphics/pie-chart-icon.png" alt="Pie graf">
+                    <img src="graphics/pie-chart-icon.png" alt="Poměry kategorií">
                     <span class="tooltip">Poměry kategorií</span>
                 </a>
             </div>
@@ -65,26 +72,33 @@
                 <button id="logout">Odhlásit</button>
             </div>
         </header>
-        <p>Vítejte v našem finančním manažeru!
-            Zde můžete spravovat své finance, sledovat výdaje a
-            plánovat rozpočet.</p>
+
+        <p>Vítejte v našem finančním manažeru! Zde můžete spravovat své finance,
+            sledovat výdaje a plánovat rozpočet.</p>
+
         <hr>
+
         <main>
+            <!-- Stav účtu -->
             <div class="balance-section">
                 <div id="account-balance" class="balance-card">
                     <p id="balance-label">Stav účtu:</p>
                     <p id="balance">0 Kč</p>
                 </div>
+                <!-- Tlačítko pro export údajů do CSV -->
                 <button id="export-csv"> → Exportovat údaje</button>
             </div>
+
             <hr>
-            <!-- Transakce - modals pro pridani prijmu a vydaju, objevi se po kliknuti na tlacitko-->
+
+            <!-- Transakce - modály pro přidání příjmů a výdajů, objeví se po kliknutí na tlačítko -->
             <section id="transactions-section">
                 <h2>TRANSAKCE</h2>
                 <button id="add-expense">Nový výdaj</button>
                 <button id="add-income">Nový příjem</button>
                 <div id="expense-modal" class="modal hidden">
                     <div class="modal-content">
+                        <!-- Modální okno pro přidání výdaje -->
                         <h2>Nový výdaj</h2>
                         <form id="expense-form">
                             <input type="number" id="expense-amount" placeholder="Částka (Kč)" required>
@@ -106,6 +120,8 @@
                         </form>
                     </div>
                 </div>
+
+                <!-- Modální okno pro přidání příjmu -->
                 <div id="income-modal" class="modal hidden">
                     <div class="modal-content">
                         <h2>Nový příjem</h2>
@@ -127,7 +143,8 @@
                         </form>
                     </div>
                 </div>
-                <!--FILTROVANI transakci - podle ruznych kriterii-->
+
+                <!--FILTROVÁNÍ transakcÍ -->
                 <div id="transaction-controls">
                     <label>Počet:</label>
                     <select id="transaction-limit">
@@ -148,6 +165,7 @@
 
                     <button id="filters">Rozšířené filtrování</button>
                 </div>
+
                 <div id="advanced-filters" class="hidden">
                     <label>Kategorie:</label>
                     <select id="filter-category">
@@ -181,7 +199,9 @@
                     <button id="apply-filters">Použít filtry</button>
                     <button id="reset-filters">Resetovat filtry</button>
                 </div>
+
                 <div>
+                    <!-- Tabulka pro zobrazení transakcí -->
                     <h3>Poslední transakce:</h3>
                     <table id="transaction-table" class="tx-table">
                         <thead>
@@ -199,7 +219,10 @@
                     <p id="no-transactions-message" class="hidden">Nemáte žádné transakce odpovídající filtru.</p>
                 </div>
             </section>
+
             <hr>
+
+            <!-- Sloupcový graf příjmů a výdajů -->
             <section id="bar-graph-section">
                 <div>
                     <h2>PŘÍJMY A VÝDAJE</h2>
@@ -207,26 +230,30 @@
                 </div>
                 <div id="chart-controls">
                     <label for="chart-interval-type">Zobrazit podle:</label>
+
                     <select id="chart-interval-type">
                         <option value="day">Dny</option>
                         <option value="week">Týdny</option>
                         <option value="month" selected>Měsíce</option>
                         <option value="year">Roky</option>
                     </select>
+
                     <div id="custom-date-range">
                         <label>Od:</label>
                         <input type="date" id="chart-date-from">
                         <label>Do:</label>
                         <input type="date" id="chart-date-to">
                     </div>
+
                     <button id="update-chart">Aktualizovat graf</button>
                 </div>
             </section>
             <hr>
             <section id="pie-chart-section">
                 <h2>POMĚRY KATEGORIÍ</h2>
-                <!--pie charts pro kategorie výdajů a příjmů -->
+                <!-- Koláčové grafy pro kategorie výdajů a příjmů -->
                 <div class="pie-grid">
+                    <!-- Koláčový graf výdajů podle kategorií -->
                     <section class="pie-card">
                         <h4>Výdaje podle kategorií</h4>
                         <canvas id="expense-category-pie" width="400" height="300"></canvas>
@@ -253,6 +280,7 @@
                         <p id="expense-pie-empty" class="hidden">Ve zvoleném období nejsou žádné výdaje.</p>
                     </section>
                     <hr>
+                    <!-- Koláčový graf příjmů podle kategorií -->
                     <section class="pie-card">
                         <h4>Příjmy podle kategorií</h4>
                         <div class="pie-controls">
@@ -286,7 +314,7 @@
     <hr>
     </main>
 
-    <!-- odkazy na ostatni slozky, script + knihovna na grafy-->
+    <!-- Odkazy na ostatní složky: script + knihovna na grafy-->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script/charts.js"></script>
     <script src="script/transactions.js"></script>
